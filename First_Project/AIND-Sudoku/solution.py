@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 assignments = []
 
@@ -16,41 +17,6 @@ def assign_value(values, box, value):
     if len(value) == 1:
         assignments.append(values.copy())
     return values
-
-def naked_twins(values):
-    """Eliminate values using the naked twins strategy.
-    Args:
-        values(dict): a dictionary of the form {'box_name': '123456789', ...}
-
-    Returns:
-        the values dictionary with the naked twins eliminated from peers.
-    """
-
-    # Find all instances of naked twins
-    # Eliminate the naked twins as possibilities for their peers
-
-    # First select boxes with 2 entries
-    potential_twins = [box for box in values.keys() if len(values[box]) == 2]
-    # Collect boxes that have the same elements
-    naked_twins = [[box1,box2] for box1 in potential_twins \
-                    for box2 in peers[box1] \
-                    if set(values[box1])==set(values[box2]) ]
-
-    # For each pair of naked twins,
-    for i in range(len(naked_twins)):
-        box1 = naked_twins[i][0]
-        box2 = naked_twins[i][1]
-        # 1- compute intersection of peers
-        peers1 = set(peers[box1])
-        peers2 = set(peers[box2])
-        peers_int = peers1 & peers2
-        # 2- Delete the two digits in naked twins from all common peers.
-        for peer_val in peers_int:
-            if len(values[peer_val])>2:
-                for rm_val in values[box1]:
-                    values = assign_value(values, peer_val, values[peer_val].replace(rm_val,''))
-    return values
-
 
 def cross(A:str, B:str) -> [str]:
     """Cross product of elements in A and elements in B.
@@ -72,12 +38,6 @@ diagonal_2_units = [[rows[i]+cols[-1-i] for i in range(len(rows))]]
 
 # diagonal_sudoku variable can be changed to solve normal vs diagonal sudoku
 diagonal_sudoku = True 
-
-# if diagonal_sudoku:
-#     unitlist = row_units + column_units + square_units + diagonal_1_units + diagonal_2_units
-# else:
-#     unitlist = row_units + column_units + square_units
-
 
 unitlist = row_units + column_units + square_units + (diagonal_1_units + diagonal_2_units if diagonal_sudoku else None)
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
@@ -143,6 +103,38 @@ def only_choice(values):
                 values = assign_value(values, dplaces[0], digit)
     return values
 
+def naked_twins(values):
+    """Eliminate values using the naked twins strategy.
+    Args:
+        values(dict): a dictionary of the form {'box_name': '123456789', ...}
+
+    Returns:
+        the values dictionary with the naked twins eliminated from peers.
+    """
+
+    # Find all instances of naked twins
+    # Eliminate the naked twins as possibilities for their peers
+
+    # Get boxes with 2 probable entries
+    for unit in unitlist:
+    # Find all boxes with two digits remaining as possibilities
+        boxes_to_check = [box for box in unit if len(values[box]) == 2]
+
+        # Pairwise combinations
+        potential_twins = [list(twins) for twins in itertools.combinations(boxes_to_check, 2)]
+        for twins in potential_twins:
+            box_1 = twins[0]
+            box_2 = twins[1]
+            # Find instances of the naked twins
+            if values[box_1] == values[box_2]:
+                for box in unit:
+                    # Eliminate the naked twins as possibilities for peers
+                    if box not in [box_1, box_2]:
+                        for number in values[box_1]:
+                            #values[box] = values[box].replace(number,'')
+                            values = assign_value(values, box, values[box].replace(number,''))
+    return values
+
 def reduce_puzzle(values):
     """
     Iterate eliminate() and only_choice(). If at some point, there is a box with no available values, return False.
@@ -200,7 +192,8 @@ def solve(grid):
     return(search(values))
 
 if __name__ == '__main__':
-    diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    #diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    diag_sudoku_grid = '..7.1.......................981.5.2....2.49131..9....6........................1.9'
     print("Display grid before solving:\n\n")
     display(grid_values(diag_sudoku_grid))
 
