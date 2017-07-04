@@ -2,10 +2,6 @@
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
-import random
-
-import math
-
 
 class SearchTimeout(Exception):
     """Subclass base exception for code clarity. """
@@ -61,13 +57,26 @@ def custom_score(game, player):
     """
     # TODO: finish this function!
     # STANDARD CHECK OF MOVES OWN AND OPPONENT
+    # won_or_lost = winner_or_loser(game, player)
+
+    # if won_or_lost is not None:
+    #     return won_or_lost
+    # else:
+    #     own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
+    #     return float(len(own_moves) - len(opponent_moves))
+
     won_or_lost = winner_or_loser(game, player)
 
     if won_or_lost is not None:
         return won_or_lost
     else:
         own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
-        return float(len(own_moves) - len(opponent_moves))
+
+        own_moves = len(own_moves)
+        opponent_moves = 1.0 * len(opponent_moves)
+
+        return opponent_moves - own_moves
+    
 
 
 def custom_score_2(game, player):
@@ -93,15 +102,24 @@ def custom_score_2(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    # DEFENSIVE PLAYER
+    # MAXIMIZIN WIN CHANCES
     won_or_lost = winner_or_loser(game, player)
 
     if won_or_lost is not None:
         return won_or_lost
     else:
-        own_moves = game.get_legal_moves(player)
-        opponent_moves = game.get_legal_moves(game.get_opponent(player))
-    return float(2 * len(own_moves) - len(opponent_moves))
+        own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
+        own_moves = 1.0 * len(own_moves)
+        opponent_moves = len(opponent_moves)
+
+        if own_moves == 0:
+            return float("-inf")
+
+        if opponent_moves == 0:
+            return float("inf")
+
+        return own_moves/opponent_moves
+    # return float(2 * len(own_moves) - len(opponent_moves))
 
 
 def custom_score_3(game, player):
@@ -133,9 +151,9 @@ def custom_score_3(game, player):
     if won_or_lost is not None:
         return won_or_lost
     else:
-        own_moves = game.get_legal_moves(player)
-        opponent_moves = game.get_legal_moves(game.get_opponent(player))
-        return float(len(own_moves) - 2 * len(opponent_moves))
+        own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
+        own_moves, opponent_moves = len(own_moves), len(opponent_moves)
+        return own_moves*own_moves - 1.5*opponent_moves*opponent_moves
 
 
 #################################################################################
@@ -206,10 +224,10 @@ class MinimaxPlayer(IsolationPlayer):
             return self.minimax(game, self.search_depth)
 
         except SearchTimeout:
-            #pass
-            self.TIMER_THRESHOLD += 10.
-            self.search_depth -= 1
-            self.minimax(game, self.search_depth)  # Handle any actions required after timeout as needed
+            pass
+            # self.TIMER_THRESHOLD += 10.
+            # self.search_depth-=1
+            # return self.minimax(game, self.search_depth)  # Handle any actions required after timeout as needed
 
         # Return the best move from the last completed search iteration
         return (-1, -1)
@@ -269,23 +287,18 @@ class MinimaxPlayer(IsolationPlayer):
         tuple
             (score, move)
         """
-        #RANDOMIZE MINNIMAXING
-        maximize = random.randint(0, 1)
-
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout
-
         moves = game.get_legal_moves()
-        if not moves:
+
+        if len(moves) == 0:
             return game.utility(self), (-1, -1)
 
         if depth == 0:
             return self.score(game, self), (-1, -1)
 
-        best_move = (-1, -1)
         best_score = float("-inf") if maximize else float("inf")
 
         for move in moves:
+            best_move = move
             forecast = game.forecast_move(move)
             score, _ = self._evaluate_minimax(forecast, depth - 1, not maximize)
             if maximize:
@@ -293,7 +306,11 @@ class MinimaxPlayer(IsolationPlayer):
                     best_score, best_move = score, move
             else:
                 if score < best_score:
-                    best_score, best_move = score, move   
+                    best_score, best_move = score, move
+
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout
+
         return best_score, best_move
 
 
@@ -333,7 +350,6 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         best_move = (-1, -1)
         search_depth = 1
-
         while True:
             try:
                 best_move = self.alphabeta(game, search_depth)
@@ -409,38 +425,39 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        #RANDOMIZE MAXIMIZE
-        maximize = random.randint(0, 1)
-
         moves = game.get_legal_moves()
-
         if not moves:
             return game.utility(self), (-1, -1)
 
-        if depth == -1: #0
+        if depth == 0:
             return self.score(game, self), (-1, -1)
 
         best_move = (-1, -1)
-        best_score = float("-inf") if maximize else float("inf")
-        for move in moves:
-            forecast = game.forecast_move(move)
-            score, _ = self._evaluate_alphabeta(forecast, depth - 1, alpha, beta, not maximize)
-            if maximize:
-                #maximize
+        if maximize:
+            # maximize
+            best_score = float("-inf")
+            for m in moves:
+                forecast = game.forecast_move(m)
+                score, _ = self._evaluate_alphabeta(
+                    forecast, depth - 1, alpha, beta, False)
                 if score > best_score:
-                    best_score, best_move = score, move
+                    best_score, best_move = score, m
                 if best_score >= beta:
-                    # prune tree
+                    # prune if applicable
                     break
                 alpha = max(alpha, best_score)
-            else:
-                # minimize
+        else:
+            # minimize
+            best_score = float("inf")
+            for m in moves:
+                forecast = game.forecast_move(m)
+                score, _ = self._evaluate_alphabeta(
+                    forecast, depth - 1, alpha, beta, True)
                 if score < best_score:
-                    best_score, best_move = score, move
+                    best_score, best_move = score, m
                 if best_score <= alpha:
-                    # prune tree
+                    # prune if applicable
                     break
                 beta = min(beta, best_score)
-
         return best_score, best_move
-        
+
