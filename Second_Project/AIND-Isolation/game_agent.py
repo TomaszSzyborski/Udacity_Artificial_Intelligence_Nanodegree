@@ -56,28 +56,14 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    # STANDARD CHECK OF MOVES OWN AND OPPONENT
-    # won_or_lost = winner_or_loser(game, player)
-
-    # if won_or_lost is not None:
-    #     return won_or_lost
-    # else:
-    #     own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
-    #     return float(len(own_moves) - len(opponent_moves))
-
     won_or_lost = winner_or_loser(game, player)
 
     if won_or_lost is not None:
         return won_or_lost
     else:
-        own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
+        own_moves, opponent_moves = list(map(len, get_own_and_opponent_moves(game, player)))
 
-        own_moves = len(own_moves)
-        opponent_moves = 1.0 * len(opponent_moves)
-
-        return opponent_moves - own_moves
-    
-
+    return own_moves - 2.0 * opponent_moves
 
 def custom_score_2(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -102,24 +88,14 @@ def custom_score_2(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    # MAXIMIZIN WIN CHANCES
     won_or_lost = winner_or_loser(game, player)
 
     if won_or_lost is not None:
         return won_or_lost
     else:
-        own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
-        own_moves = 1.0 * len(own_moves)
-        opponent_moves = len(opponent_moves)
+        own_moves, opponent_moves = list(map(len, get_own_and_opponent_moves(game, player)))
 
-        if own_moves == 0:
-            return float("-inf")
-
-        if opponent_moves == 0:
-            return float("inf")
-
-        return own_moves/opponent_moves
-    # return float(2 * len(own_moves) - len(opponent_moves))
+    return own_moves * own_moves - 1.5 * opponent_moves * opponent_moves
 
 
 def custom_score_3(game, player):
@@ -145,15 +121,15 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    # AGGRESSIVE CHASING PLAYER
     won_or_lost = winner_or_loser(game, player)
 
     if won_or_lost is not None:
         return won_or_lost
     else:
-        own_moves, opponent_moves = get_own_and_opponent_moves(game, player)
-        own_moves, opponent_moves = len(own_moves), len(opponent_moves)
-        return own_moves*own_moves - 1.5*opponent_moves*opponent_moves
+        own_moves, opponent_moves = list(map(len, get_own_and_opponent_moves(game, player)))
+
+    return own_moves * own_moves - 2.0 * opponent_moves * opponent_moves
+
 
 
 #################################################################################
@@ -287,6 +263,9 @@ class MinimaxPlayer(IsolationPlayer):
         tuple
             (score, move)
         """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout
+
         moves = game.get_legal_moves()
 
         if len(moves) == 0:
@@ -296,20 +275,18 @@ class MinimaxPlayer(IsolationPlayer):
             return self.score(game, self), (-1, -1)
 
         best_score = float("-inf") if maximize else float("inf")
+        best_move = (-1, -1)
 
         for move in moves:
-            best_move = move
             forecast = game.forecast_move(move)
             score, _ = self._evaluate_minimax(forecast, depth - 1, not maximize)
-            if maximize:
-                if score > best_score:
-                    best_score, best_move = score, move
-            else:
-                if score < best_score:
-                    best_score, best_move = score, move
-
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout
+            
+            # minimax logic
+            maxing = maximize and (score > best_score)
+            minning = not maximize and (score < best_score)
+            
+            if maxing or minning:
+                best_score, best_move = score, move
 
         return best_score, best_move
 
@@ -426,38 +403,43 @@ class AlphaBetaPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         moves = game.get_legal_moves()
-        if not moves:
+
+        if len(moves) == 0:
             return game.utility(self), (-1, -1)
 
         if depth == 0:
             return self.score(game, self), (-1, -1)
 
+        best_score = float("-inf") if maximize else float("inf")
         best_move = (-1, -1)
-        if maximize:
-            # maximize
-            best_score = float("-inf")
-            for m in moves:
-                forecast = game.forecast_move(m)
-                score, _ = self._evaluate_alphabeta(
-                    forecast, depth - 1, alpha, beta, False)
-                if score > best_score:
-                    best_score, best_move = score, m
-                if best_score >= beta:
-                    # prune if applicable
-                    break
-                alpha = max(alpha, best_score)
-        else:
-            # minimize
-            best_score = float("inf")
-            for m in moves:
-                forecast = game.forecast_move(m)
-                score, _ = self._evaluate_alphabeta(
-                    forecast, depth - 1, alpha, beta, True)
-                if score < best_score:
-                    best_score, best_move = score, m
-                if best_score <= alpha:
-                    # prune if applicable
-                    break
-                beta = min(beta, best_score)
-        return best_score, best_move
 
+        for move in moves:
+            forecast = game.forecast_move(move)
+            score, _ = self._evaluate_alphabeta(forecast,
+                depth - 1,
+                alpha,
+                beta,
+                not maximize)
+            
+            #minimax logic
+            maxing = maximize and (score > best_score)
+            minning = not maximize and (score < best_score)
+            
+            if maxing or minning:
+                best_score, best_move = score, move
+            
+            #prune the tree if possible
+            #pruning logic
+            prune_1 = maximize and (best_score >= beta)
+            prune_2 = (not maximize) and (best_score <= alpha)
+            
+            
+            if prune_1 or prune_2:
+                return best_score, best_move
+
+            if maximize:
+                alpha = max(alpha, best_score)
+            else:
+                beta = min(beta, best_score)
+
+        return best_score, best_move
