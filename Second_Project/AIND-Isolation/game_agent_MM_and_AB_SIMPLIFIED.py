@@ -208,7 +208,7 @@ class MinimaxPlayer(IsolationPlayer):
         # Return the best move from the last completed search iteration
         return (-1, -1)
 
-    def minimax(self, game, depth):
+    def minimax(self, game, depth, maximize=True):
         """Implement depth-limited minimax search algorithm as described in
         the lectures.
         This should be a modified version of MINIMAX-DECISION in the AIMA text.
@@ -225,9 +225,13 @@ class MinimaxPlayer(IsolationPlayer):
         depth : int
             Depth is an integer representing the maximum number of plies to
             search in the game tree before aborting
+        maximize : boolean
+            True if it's a maximize node. False otherwise.
         Returns
         -------
         (int, int)
+            tuple
+            (score, move)
             The board coordinates of the best move found in the current search;
             (-1, -1) if there are no legal moves
         Notes
@@ -244,28 +248,6 @@ class MinimaxPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        return self._evaluate_minimax(game, depth)[1]
-
-    def _evaluate_minimax(self, game, depth, maximize=True): 
-        """Evaluates nodes per minimax logic
-        Parameters
-        ----------
-        game : isolation.Board
-            An instance of the Isolation game `Board` class representing the
-            current game state
-        depth : int
-            Depth is an integer representing the maximum number of plies to
-            search in the game tree before aborting
-        maximize : boolean
-            True if it's a maximize node. False otherwise.
-        Returns
-        -------
-        tuple
-            (score, move)
-        """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout
-
         moves = game.get_legal_moves()
 
         if len(moves) == 0:
@@ -279,7 +261,7 @@ class MinimaxPlayer(IsolationPlayer):
 
         for move in moves:
             forecast = game.forecast_move(move)
-            score, _ = self._evaluate_minimax(forecast, depth - 1, not maximize)
+            score, _ = self.minimax(forecast, depth - 1, not maximize)
             
             # minimax logic
             maxing = maximize and (score > best_score)
@@ -336,7 +318,7 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         return best_move
 
-    def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
+    def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf"), maximize=True):
         """Implement depth-limited minimax search with alpha-beta pruning as
         described in the lectures.
         This should be a modified version of ALPHA-BETA-SEARCH in the AIMA text
@@ -378,30 +360,6 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        return self._evaluate_alphabeta(game, depth, alpha, beta)[1]
-    
-    def _evaluate_alphabeta(self, game, depth, alpha, beta, maximize=True):
-        """Evaluates node per alphabeta logic
-        Parameters
-        ----------
-        game : isolation.Board
-            An instance of the Isolation game `Board` class representing the
-            current game state
-        depth : int
-            Depth is an integer representing the maximum number of plies to
-            search in the game tree before aborting
-        alpha : float
-            Alpha limits the lower bound of search on minimizing layers
-        beta : float
-            Beta limits the upper bound of search on maximizing layers
-        Returns
-        -------
-        tuple
-            (score, move)
-        """
-        if self.time_left() < self.TIMER_THRESHOLD:
-            raise SearchTimeout()
-
         moves = game.get_legal_moves()
 
         if len(moves) == 0:
@@ -415,7 +373,7 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         for move in moves:
             forecast = game.forecast_move(move)
-            score, _ = self._evaluate_alphabeta(forecast,
+            score, _ = self.alphabeta(forecast,
                 depth - 1,
                 alpha,
                 beta,
@@ -430,10 +388,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             
             #prune the tree if possible
             #pruning logic
-            prune_1 = maximize and (best_score >= beta)
-            prune_2 = (not maximize) and (best_score <= alpha)
-
-            if prune_1 or prune_2:
+            if alpha >= beta:
                 return best_score, best_move
 
             if maximize:
