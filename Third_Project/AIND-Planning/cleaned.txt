@@ -1,0 +1,77 @@
+b'Solving Air Cargo Problem 1 using breadth_first_search...Expansions   Goal Tests   New Nodes    43          56         180    Plan length: 6  Time elapsed in seconds: 0.06179350591264665'
+
+
+
+b'Solving Air Cargo Problem 1 using breadth_first_tree_search...Expansions   Goal Tests   New Nodes   1458        1459        5960   Plan length: 6  Time elapsed in seconds: 1.9147774330340326'
+
+
+
+b'Solving Air Cargo Problem 1 using depth_first_graph_search...Expansions   Goal Tests   New Nodes    21          22          84    Plan length: 20  Time elapsed in seconds: 0.03079291502945125'
+
+
+
+b'Solving Air Cargo Problem 1 using depth_limited_search...Expansions   Goal Tests   New Nodes   101         271         414    Plan length: 50  Time elapsed in seconds: 0.16493457206524909'
+
+
+
+b'Solving Air Cargo Problem 1 using uniform_cost_search...Expansions   Goal Tests   New Nodes    55          57         224    Plan length: 6  Time elapsed in seconds: 0.07133508299011737'
+
+
+
+b'Solving Air Cargo Problem 1 using recursive_best_first_search with h_1...Expansions   Goal Tests   New Nodes   4229        4230       17023   Plan length: 6  Time elapsed in seconds: 5.487882941029966'
+
+
+
+b'Solving Air Cargo Problem 1 using greedy_best_first_graph_search with h_1...Expansions   Goal Tests   New Nodes    7           9           28    Plan length: 6  Time elapsed in seconds: 0.011034526978619397'
+
+
+
+b'Solving Air Cargo Problem 1 using astar_search with h_1...Expansions   Goal Tests   New Nodes    55          57         224    Plan length: 6  Time elapsed in seconds: 0.06933778699021786'
+
+
+
+b'Solving Air Cargo Problem 1 using astar_search with h_ignore_preconditions...Expansions   Goal Tests   New Nodes    41          43         170    Plan length: 6  Time elapsed in seconds: 0.05627109098713845'
+
+
+
+b'Solving Air Cargo Problem 1 using astar_search with h_pg_levelsum...Expansions   Goal Tests   New Nodes    11          13          50    Plan length: 6  Time elapsed in seconds: 1.7140873379539698'
+
+
+
+b'Solving Air Cargo Problem 2 using breadth_first_search...Expansions   Goal Tests   New Nodes   3343        4609       30509   Plan length: 9  Time elapsed in seconds: 26.69954807998147'
+
+
+
+Search took more than 10 minutes
+
+
+
+b'Solving Air Cargo Problem 2 using depth_first_graph_search...Expansions   Goal Tests   New Nodes   624         625         5602   Plan length: 619  Time elapsed in seconds: 6.158397441962734'
+
+
+
+Search took more than 10 minutes
+
+
+
+b'Solving Air Cargo Problem 2 using uniform_cost_search...Expansions   Goal Tests   New Nodes   4604        4606       41828   Plan length: 9  Time elapsed in seconds: 26.665113802067935'
+
+
+
+Search took more than 10 minutes
+
+
+
+b'Solving Air Cargo Problem 2 using greedy_best_first_graph_search with h_1...Expansions   Goal Tests   New Nodes   479         481         4311   Plan length: 16  Time elapsed in seconds: 2.8897291269386187'
+
+
+
+b'Solving Air Cargo Problem 2 using astar_search with h_1...Expansions   Goal Tests   New Nodes   4604        4606       41828   Plan length: 9  Time elapsed in seconds: 28.984232326969504'
+
+
+
+b'Solving Air Cargo Problem 2 using astar_search with h_ignore_preconditions...Expansions   Goal Tests   New Nodes   4422        4424       39027   Plan length: 12  Time elapsed in seconds: 29.55310667899903'
+
+
+
+Search took more than 10 minutes
